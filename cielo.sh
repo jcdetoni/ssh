@@ -1,0 +1,152 @@
+#!/bin/bash
+if [ $EUID != 0 ]; then
+    echo 'Você precisa ser root para instalar certificados.'
+    exit $?
+fi
+
+# Diretório onde os certificados serão instalados
+cert_path=`openssl version -d|sed 's/.*\"\(.*\)\"/\1/g'`/certs
+
+# Path para o certificado da Cielo
+ecommerce=$cert_path/ecommerce-cielo.crt
+# Path para o certificado da intermediária
+intermediaria=$cert_path/intermediaria-cielo.crt
+# Path para o certificado raiz
+raiz=$cert_path/raiz-cielo.crt
+
+# Instalação do certificado raiz
+echo "Criando certificado raiz em $raiz"
+
+(cat << 'RAIZ-CIELO'
+-----BEGIN CERTIFICATE-----
+MIIE0zCCA7ugAwIBAgIQGNrRniZ96LtKIVjNzGs7SjANBgkqhkiG9w0BAQUFADCB
+yjELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDlZlcmlTaWduLCBJbmMuMR8wHQYDVQQL
+ExZWZXJpU2lnbiBUcnVzdCBOZXR3b3JrMTowOAYDVQQLEzEoYykgMjAwNiBWZXJp
+U2lnbiwgSW5jLiAtIEZvciBhdXRob3JpemVkIHVzZSBvbmx5MUUwQwYDVQQDEzxW
+ZXJpU2lnbiBDbGFzcyAzIFB1YmxpYyBQcmltYXJ5IENlcnRpZmljYXRpb24gQXV0
+aG9yaXR5IC0gRzUwHhcNMDYxMTA4MDAwMDAwWhcNMzYwNzE2MjM1OTU5WjCByjEL
+MAkGA1UEBhMCVVMxFzAVBgNVBAoTDlZlcmlTaWduLCBJbmMuMR8wHQYDVQQLExZW
+ZXJpU2lnbiBUcnVzdCBOZXR3b3JrMTowOAYDVQQLEzEoYykgMjAwNiBWZXJpU2ln
+biwgSW5jLiAtIEZvciBhdXRob3JpemVkIHVzZSBvbmx5MUUwQwYDVQQDEzxWZXJp
+U2lnbiBDbGFzcyAzIFB1YmxpYyBQcmltYXJ5IENlcnRpZmljYXRpb24gQXV0aG9y
+aXR5IC0gRzUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCvJAgIKXo1
+nmAMqudLO07cfLw8RRy7K+D+KQL5VwijZIUVJ/XxrcgxiV0i6CqqpkKzj/i5Vbex
+t0uz/o9+B1fs70PbZmIVYc9gDaTY3vjgw2IIPVQT60nKWVSFJuUrjxuf6/WhkcIz
+SdhDY2pSS9KP6HBRTdGJaXvHcPaz3BJ023tdS1bTlr8Vd6Gw9KIl8q8ckmcY5fQG
+BO+QueQA5N06tRn/Arr0PO7gi+s3i+z016zy9vA9r911kTMZHRxAy3QkGSGT2RT+
+rCpSx4/VBEnkjWNHiDxpg8v+R70rfk/Fla4OndTRQ8Bnc+MUCH7lP59zuDMKz10/
+NIeWiu5T6CUVAgMBAAGjgbIwga8wDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8E
+BAMCAQYwbQYIKwYBBQUHAQwEYTBfoV2gWzBZMFcwVRYJaW1hZ2UvZ2lmMCEwHzAH
+BgUrDgMCGgQUj+XTGoasjY5rw8+AatRIGCx7GS4wJRYjaHR0cDovL2xvZ28udmVy
+aXNpZ24uY29tL3ZzbG9nby5naWYwHQYDVR0OBBYEFH/TZafC3ey78DAJ80M5+gKv
+MzEzMA0GCSqGSIb3DQEBBQUAA4IBAQCTJEowX2LP2BqYLz3q3JktvXf2pXkiOOzE
+p6B4Eq1iDkVwZMXnl2YtmAl+X6/WzChl8gGqCBpH3vn5fJJaCGkgDdk+bW48DW7Y
+5gaRQBi5+MHt39tBquCWIMnNZBU4gcmU7qKEKQsTb47bDN0lAtukixlE0kF6BWlK
+WE9gyn6CagsCqiUXObXbf+eEZSqVir2G3l6BFoMtEMze/aiCKm0oHw0LxOXnGiYZ
+4fQRbxC1lfznQgUy286dUV4otp6F01vvpX1FQHKOtw5rDgb7MzVIcbidJ4vEZV8N
+hnacRHr2lVz2XTIIM6RUthg/aFzyQkqFOFSDX9HoLPKsEdao7WNq
+-----END CERTIFICATE-----
+RAIZ-CIELO
+) > $raiz
+
+# Criando um link simbólico para o certificado utilizando seu hash
+ln -s $raiz $cert_path/`openssl x509 -noout -hash -in $raiz`.0 &> /dev/null
+
+# Verificando se o certificado foi instalado corretamente
+openssl verify -CApath $cert_path $raiz
+
+# Instalação do certificado da intermediária
+echo "Criando certificado da intermediária em $intermediaria"
+
+(cat << 'INTERMEDIARIA-CIELO'
+-----BEGIN CERTIFICATE-----
+MIIFKzCCBBOgAwIBAgIQfuFKb2/v8tN/P61lTTratDANBgkqhkiG9w0BAQsFADCB
+yjELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDlZlcmlTaWduLCBJbmMuMR8wHQYDVQQL
+ExZWZXJpU2lnbiBUcnVzdCBOZXR3b3JrMTowOAYDVQQLEzEoYykgMjAwNiBWZXJp
+U2lnbiwgSW5jLiAtIEZvciBhdXRob3JpemVkIHVzZSBvbmx5MUUwQwYDVQQDEzxW
+ZXJpU2lnbiBDbGFzcyAzIFB1YmxpYyBQcmltYXJ5IENlcnRpZmljYXRpb24gQXV0
+aG9yaXR5IC0gRzUwHhcNMTMxMDMxMDAwMDAwWhcNMjMxMDMwMjM1OTU5WjB3MQsw
+CQYDVQQGEwJVUzEdMBsGA1UEChMUU3ltYW50ZWMgQ29ycG9yYXRpb24xHzAdBgNV
+BAsTFlN5bWFudGVjIFRydXN0IE5ldHdvcmsxKDAmBgNVBAMTH1N5bWFudGVjIENs
+YXNzIDMgRVYgU1NMIENBIC0gRzMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+AoIBAQDYoWV0I+grZOIy1zM3PY71NBZI3U9/hxz4RCMTjvsR2ERaGHGOYBYmkpv9
+FwvhcXBC/r/6HMCqo6e1cej/GIP23xAKE2LIPZyn3i4/DNkd5y77Ks7Imn+Hv9hM
+BBUyydHMlXGgTihPhNk1++OGb5RT5nKKY2cuvmn2926OnGAE6yn6xEdC0niY4+wL
+pZLct5q9gGQrOHw4CVtm9i2VeoayNC6FnpAOX7ddpFFyRnATv2fytqdNFB5suVPu
+IxpOjUhVQ0GxiXVqQCjFfd3SbtICGS97JJRL6/EaqZvjI5rq+jOrCiy39GAI3Z8c
+zd0tAWaAr7MvKR0juIrhoXAHDDQPAgMBAAGjggFdMIIBWTAvBggrBgEFBQcBAQQj
+MCEwHwYIKwYBBQUHMAGGE2h0dHA6Ly9zMi5zeW1jYi5jb20wEgYDVR0TAQH/BAgw
+BgEB/wIBADBlBgNVHSAEXjBcMFoGBFUdIAAwUjAmBggrBgEFBQcCARYaaHR0cDov
+L3d3dy5zeW1hdXRoLmNvbS9jcHMwKAYIKwYBBQUHAgIwHBoaaHR0cDovL3d3dy5z
+eW1hdXRoLmNvbS9ycGEwMAYDVR0fBCkwJzAloCOgIYYfaHR0cDovL3MxLnN5bWNi
+LmNvbS9wY2EzLWc1LmNybDAOBgNVHQ8BAf8EBAMCAQYwKQYDVR0RBCIwIKQeMBwx
+GjAYBgNVBAMTEVN5bWFudGVjUEtJLTEtNTMzMB0GA1UdDgQWBBQBWavn3ToLWaZk
+Y9bPIAdX1ZHnajAfBgNVHSMEGDAWgBR/02Wnwt3su/AwCfNDOfoCrzMxMzANBgkq
+hkiG9w0BAQsFAAOCAQEAQgFVe9AWGl1Y6LubqE3X89frE5SG1n8hC0e8V5uSXU8F
+nzikEHzPg74GQ0aNCLxq1xCm+quvL2GoY/Jl339MiBKIT7Np2f8nwAqXkY9W+4nE
+qLuSLRtzsMarNvSWbCAI7woeZiRFT2cAQMgHVHQzO6atuyOfZu2iRHA0+w7qAf3P
+eHTfp61Vt19N9tY/4IbOJMdCqRMURDVLtt/JYKwMf9mTIUvunORJApjTYHtcvNUw
+LwfORELEC5n+5p/8sHiGUW3RLJ3GlvuFgrsEL/digO9i2n/2DqyQuFa9eT/ygG6j
+2bkPXToHHZGThkspTOHcteHgM52zyzaRS/6htO7w+Q==
+-----END CERTIFICATE-----
+INTERMEDIARIA-CIELO
+) > $intermediaria
+
+# Criando um link simbólico para o certificado utilizando seu hash
+ln -s $intermediaria $cert_path/`openssl x509 -noout -hash -in $intermediaria`.0 &> /dev/null
+
+# Verificando se o certificado foi instalado corretamente
+openssl verify -CApath $cert_path $intermediaria
+
+# Instalação do certificado Cielo
+echo "Criando certificado ecommerce da Cielo em $ecommerce"
+
+(cat << 'ECOMMERCE-CIELO'
+-----BEGIN CERTIFICATE-----
+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
+-----END CERTIFICATE-----
+ECOMMERCE-CIELO
+) > $ecommerce
+
+# Criando um link simbólico para o certificado utilizando seu hash
+ln -s $ecommerce $cert_path/`openssl x509 -noout -hash -in $ecommerce`.0 &> /dev/null
+
+# Verificando se o certificado foi instalado corretamente
+openssl verify -CApath $cert_path $ecommerce
+
+# Exibindo informações do certificado instalado
+openssl x509 -in $ecommerce -text -noout
